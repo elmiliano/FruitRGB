@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "lcd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,6 +37,23 @@ typedef struct{
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define RS_PORT GPIOF
+#define EN_PORT GPIOE
+
+#define D4_PORT GPIOF
+#define D5_PORT GPIOE
+#define D6_PORT GPIOE
+#define D7_PORT GPIOF
+
+//4 pin mode -> pins
+#define D4_PIN GPIO_PIN_14
+#define D5_PIN GPIO_PIN_11
+#define D6_PIN GPIO_PIN_9
+#define D7_PIN GPIO_PIN_13
+
+#define RS_PIN GPIO_PIN_15
+#define EN_PIN  GPIO_PIN_13
+
 #define TCS34725_CMD_Read_Word    0x20
 #define TCS34725_CMD_BIT          0x80
 #define IIC_Addr_t				  0x29<<1
@@ -80,7 +98,7 @@ TIM_HandleTypeDef htim3;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-
+LCD_t lcd;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -95,6 +113,72 @@ static void MX_TIM3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void lcd_send_nibble(uint8_t nibble) {
+    // Set data pins
+    HAL_GPIO_WritePin(D4_PORT, D4_PIN, (nibble & 0x01) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(D5_PORT, D5_PIN, (nibble & 0x02) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(D6_PORT, D6_PIN, (nibble & 0x04) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(D7_PORT, D7_PIN, (nibble & 0x08) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+
+    // Enable signal
+    HAL_GPIO_WritePin(EN_PORT, EN_PIN, GPIO_PIN_SET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(EN_PORT, EN_PIN, GPIO_PIN_RESET);
+    HAL_Delay(1);
+}
+
+void lcd_send_command(uint8_t command) {
+    // Set RS pin to low for command
+    HAL_GPIO_WritePin(RS_PORT, RS_PIN, GPIO_PIN_RESET);
+
+    // Send upper nibble of command
+    uint8_t data = (command >> 4) & 0x0F;
+    lcd_send_nibble(data);
+
+    // Send lower nibble of command
+    data = command & 0x0F;
+    lcd_send_nibble(data);
+}
+
+void lcd_send_data(uint8_t data) {
+    // Set RS pin to high for data
+    HAL_GPIO_WritePin(RS_PORT, RS_PIN, GPIO_PIN_SET);
+
+    // Send upper nibble of data
+    uint8_t temp = (data >> 4) & 0x0F;
+    lcd_send_nibble(temp);
+
+    // Send lower nibble of data
+    temp = data & 0x0F;
+    lcd_send_nibble(temp);
+}
+
+void lcd_init() {
+	lcd_send_command(0x33); // 4-bit mode
+	HAL_Delay(10);
+	lcd_send_command(0x38); // 2-line mode and 5x8 dot matrix
+	HAL_Delay(10);
+	lcd_send_command(0x0F); // Display On/Off
+	HAL_Delay(10);
+	lcd_send_command(0x06); // cursor to increment after each character and no shift
+	HAL_Delay(10);
+	lcd_send_command(0x01); // clear
+	HAL_Delay(10);
+	lcd_send_command(0x80); // cursor to beginning
+	HAL_Delay(10);
+	lcd_send_command(0x08); // backlight
+	HAL_Delay(10);
+}
+
+void lcd_display_string(char *string) {
+    while (*string != '\0') {
+        lcd_send_data(*string);
+        string++;
+    }
+}
+
+
 uint16_t DEV_I2C_ReadWord(uint8_t add_)
 {
     uint8_t Buf[2]={0, 0};
@@ -251,6 +335,8 @@ int main(void)
 	char buffer[50];
 	int buffer_len;
 
+	char message[] = "Hello World!";
+
 	HAL_StatusTypeDef status;
   /* USER CODE END 1 */
 
@@ -260,7 +346,9 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  TCS34725_Init();
 
+  lcd_init();
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -276,8 +364,6 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-  TCS34725_Init();
-
 //    TCS34725_INTEGRATIONTIME_2_4MS  = 0xFF,   /**<  2.4ms - 1 cycle    - Max Count: 1024  */
 //    TCS34725_INTEGRATIONTIME_24MS   = 0xF6,   /**<  24ms  - 10 cycles  - Max Count: 10240 */
 //    TCS34725_INTEGRATIONTIME_50MS   = 0xEB,   /**<  50ms  - 20 cycles  - Max Count: 20480 */
@@ -294,6 +380,25 @@ int main(void)
 
 //  TCS34725_Set_Integration_Time(0x00);
 //  TCS34725_Set_Gain(0x01);
+
+  lcd.RS_port = RS_PORT;
+  lcd.RS_pin = RS_PIN;
+
+  lcd.EN_port = EN_PORT;
+  lcd.EN_pin = EN_PIN;
+
+  lcd.D4_port = D4_PORT;
+  lcd.D4_pin = D4_PIN;
+  lcd.D5_port = D5_PORT;
+  lcd.D5_pin = D5_PIN;
+  lcd.D6_port = D6_PORT;
+  lcd.D6_pin = D6_PIN;
+  lcd.D7_port = D7_PORT;
+  lcd.D7_pin = D7_PIN;
+
+  lcd_begin(&lcd, 16, 2, LCD_5x8DOTS);
+  lcd_setCursor(&lcd, 0, 0);
+  lcd_print(&lcd, message);
   /* USER CODE END 2 */
 
   /* Infinite loop */
