@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include <string.h>
 #include "lcd.h"
 /* USER CODE END Includes */
 
@@ -52,7 +53,7 @@ typedef struct{
 #define D7_PIN GPIO_PIN_13
 
 #define RS_PIN GPIO_PIN_15
-#define EN_PIN  GPIO_PIN_13
+#define EN_PIN GPIO_PIN_13
 
 #define TCS34725_CMD_Read_Word    0x20
 #define TCS34725_CMD_BIT          0x80
@@ -114,68 +115,12 @@ static void MX_TIM3_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void lcd_send_nibble(uint8_t nibble) {
-    // Set data pins
-    HAL_GPIO_WritePin(D4_PORT, D4_PIN, (nibble & 0x01) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(D5_PORT, D5_PIN, (nibble & 0x02) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(D6_PORT, D6_PIN, (nibble & 0x04) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(D7_PORT, D7_PIN, (nibble & 0x08) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-
-    // Enable signal
-    HAL_GPIO_WritePin(EN_PORT, EN_PIN, GPIO_PIN_SET);
-    HAL_Delay(1);
-    HAL_GPIO_WritePin(EN_PORT, EN_PIN, GPIO_PIN_RESET);
-    HAL_Delay(1);
-}
-
-void lcd_send_command(uint8_t command) {
-    // Set RS pin to low for command
-    HAL_GPIO_WritePin(RS_PORT, RS_PIN, GPIO_PIN_RESET);
-
-    // Send upper nibble of command
-    uint8_t data = (command >> 4) & 0x0F;
-    lcd_send_nibble(data);
-
-    // Send lower nibble of command
-    data = command & 0x0F;
-    lcd_send_nibble(data);
-}
-
-void lcd_send_data(uint8_t data) {
-    // Set RS pin to high for data
-    HAL_GPIO_WritePin(RS_PORT, RS_PIN, GPIO_PIN_SET);
-
-    // Send upper nibble of data
-    uint8_t temp = (data >> 4) & 0x0F;
-    lcd_send_nibble(temp);
-
-    // Send lower nibble of data
-    temp = data & 0x0F;
-    lcd_send_nibble(temp);
-}
-
-void lcd_init() {
-	lcd_send_command(0x33); // 4-bit mode
-	HAL_Delay(10);
-	lcd_send_command(0x38); // 2-line mode and 5x8 dot matrix
-	HAL_Delay(10);
-	lcd_send_command(0x0F); // Display On/Off
-	HAL_Delay(10);
-	lcd_send_command(0x06); // cursor to increment after each character and no shift
-	HAL_Delay(10);
-	lcd_send_command(0x01); // clear
-	HAL_Delay(10);
-	lcd_send_command(0x80); // cursor to beginning
-	HAL_Delay(10);
-	lcd_send_command(0x08); // backlight
-	HAL_Delay(10);
-}
-
-void lcd_display_string(char *string) {
-    while (*string != '\0') {
-        lcd_send_data(*string);
-        string++;
-    }
+void display_message ( char *title,  char *message ) {
+//	lcd_clear(&lcd);
+	lcd_setCursor(&lcd, 0, 0);
+	lcd_print(&lcd, title);
+	lcd_setCursor(&lcd, 0, 1);
+	lcd_print(&lcd, message);
 }
 
 
@@ -327,15 +272,19 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	RGB rgb;
-	uint32_t RGB888=0;
-	uint8_t r_data=0;
-	uint8_t g_data=0;
-	uint8_t b_data=0;
+	uint32_t RGB888;
+	uint8_t r_data;
+	uint8_t g_data;
+	uint8_t b_data;
 
 	char buffer[50];
 	int buffer_len;
 
-	char message[] = "Hello World!";
+	char title[] = "Banana Grade:";
+	char rx_buffer[10] = "";
+//	uint8_t rx_index = 0;
+//	uint32_t rx_index = 0;
+	uint8_t lcd_flag = 0;
 
 	HAL_StatusTypeDef status;
   /* USER CODE END 1 */
@@ -346,9 +295,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  TCS34725_Init();
-
-  lcd_init();
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -364,6 +310,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+  TCS34725_Init();
 //    TCS34725_INTEGRATIONTIME_2_4MS  = 0xFF,   /**<  2.4ms - 1 cycle    - Max Count: 1024  */
 //    TCS34725_INTEGRATIONTIME_24MS   = 0xF6,   /**<  24ms  - 10 cycles  - Max Count: 10240 */
 //    TCS34725_INTEGRATIONTIME_50MS   = 0xEB,   /**<  50ms  - 20 cycles  - Max Count: 20480 */
@@ -397,8 +344,9 @@ int main(void)
   lcd.D7_pin = D7_PIN;
 
   lcd_begin(&lcd, 16, 2, LCD_5x8DOTS);
-  lcd_setCursor(&lcd, 0, 0);
-  lcd_print(&lcd, message);
+  lcd_clear(&lcd);
+  HAL_Delay(1);
+  display_message(title, "pending...");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -406,34 +354,50 @@ int main(void)
   while (1)
   {
 
-	  uint32_t pin_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3);
+	  uint32_t pin_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3);	// read button in PA3
 
 	  if (pin_state != GPIO_PIN_SET) {
-		  rgb=TCS34725_Get_RGBData();
-		  RGB888=TCS34725_GetRGB888(rgb);
+
+		  lcd_flag = 1;
+
+		  rgb=TCS34725_Get_RGBData();		// read sensor
+		  RGB888=TCS34725_GetRGB888(rgb);	// convert sensor data
 		  r_data = RGB888>>16;
 		  g_data = (RGB888>>8) & 0xff;
 		  b_data = (RGB888) & 0xff;
 
 		  buffer_len = sprintf(buffer, "%u,%u,%u\n", r_data, g_data, b_data);
-		  status = HAL_UART_Transmit(&huart3, (uint8_t *) buffer, buffer_len, 100);
+		  status = HAL_UART_Transmit(&huart3, (uint8_t *) buffer, buffer_len, 1000);	// send sensor data to client
 
-//		if (status != HAL_OK) {
-//			HAL_Delay(5000);
-//		}
+		  HAL_Delay(1000);
 
-		if(TCS34725_GetLux_Interrupt(0xff00, 0x0Cff) == 1){
-			printf("Lux_Interrupt = 1\r\n");
-		}else{
-			printf("Lux_Interrupt = 0\r\n");
-		}
-		printf("\r\n");
-		//DEV_Delay_ms(300);
-	}
+	  } else {
+
+		  if (lcd_flag) {
+
+			  HAL_Delay(1000);
+
+			  status = HAL_UART_Receive(&huart3, (uint8_t *) rx_buffer, 10, 1000); // Receive grade from client
+
+			  HAL_Delay(1000);
+
+			  lcd_clear(&lcd);
+			  HAL_Delay(1);
+			  display_message(title, rx_buffer); // Display message
+
+			  if (status == HAL_TIMEOUT) {
+				  lcd_flag = 0;
+			  }
+
+		    }
+
+	  }
+
+
+  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
   /* USER CODE END 3 */
 }
 
@@ -622,6 +586,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
