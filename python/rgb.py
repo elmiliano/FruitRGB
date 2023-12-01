@@ -1,8 +1,11 @@
 import datetime 
+
+# DATETIME
 now = datetime.datetime.today()
 f = '%Y-%m-%d %H:%M:%S'
 now = now.strftime(f)
-class RGB():
+
+class RGB(): # define RGB class
     def __init__(self,r,g,b):
         self.r = r
         self.g = g
@@ -10,7 +13,7 @@ class RGB():
         self.grade = None
         self.chargrade = None
 
-    def dictgrade(self):
+    def dictgrade(self): # return RGB values and maturity
         return {
             'R': self.r,
             'G': self.g,
@@ -20,7 +23,7 @@ class RGB():
             'Moment' : now
         }
     
-    def evaluate(self):
+    def evaluate(self): # evaluate banana maturity from RGB value (NOT USED)
         if ((self.r > self.g) and ((self.r - self.g) < 9)) and (self.g >= 142):
             self.grade = 3
             self.chargrade = 'RIPE'
@@ -35,9 +38,9 @@ class RGB():
             self.chargrade = 'NOT RIPE'
         return self.grade
 
-    def evaluate_banana(self):
-        green_threshold = 100  # Adjust as needed for green detection
-        yellow_threshold = 200  # Adjust as needed for yellow detection
+    def evaluate_banana(self): # evaluate banana maturity from RGB value
+        green_threshold = 100
+        yellow_threshold = 200
 
         if self.g > self.r and self.g > self.b and self.g > green_threshold:
             self.grade = 1
@@ -53,9 +56,6 @@ class RGB():
             self.chargrade = 'THROW AWAY'
 
         return self.grade
-
-    
-
 
 if __name__ == '__main__':
     banana = RGB(105,240,187)
