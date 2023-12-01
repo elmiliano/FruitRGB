@@ -317,7 +317,7 @@ int main(void)
 //    TCS34725_INTEGRATIONTIME_101MS  = 0xD5,   /**<  101ms - 42 cycles  - Max Count: 43008 */
 //    TCS34725_INTEGRATIONTIME_154MS  = 0xC0,   /**<  154ms - 64 cycles  - Max Count: 65535 */
 //    TCS34725_INTEGRATIONTIME_700MS  = 0x00    /**<  700ms - 256 cycles - Max Count: 65535 */
-  TCS34725_Set_Integration_Time(0xEB);
+  TCS34725_Set_Integration_Time(0xD5);
 
 //    TCS34725_GAIN_1X                = 0x00,   /**<  No gain  */
 //    TCS34725_GAIN_4X                = 0x01,   /**<  4x gain  */
@@ -375,9 +375,11 @@ int main(void)
 
 		  if (lcd_flag) {
 
+			  memset(rx_buffer, '\0', 50);
+
 			  status = HAL_UART_Receive(&huart3, (uint8_t *) rx_buffer, 10, 1000); // Receive grade from client
 
-			  HAL_Delay(1000);
+			  HAL_Delay(1500);
 
 			  lcd_clear(&lcd);
 			  HAL_Delay(1);

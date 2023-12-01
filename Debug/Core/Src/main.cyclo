@@ -12,9 +12,9 @@
 ../Core/Src/main.c:246:13:TCS34725_Set_Interrupt_Persistence_Reg	2
 ../Core/Src/main.c:254:9:TCS34725_GetLux_Interrupt	2
 ../Core/Src/main.c:271:5:main	4
-../Core/Src/main.c:408:6:SystemClock_Config	3
-../Core/Src/main.c:450:13:MX_I2C2_Init	4
-../Core/Src/main.c:498:13:MX_TIM3_Init	4
-../Core/Src/main.c:547:13:MX_USART3_UART_Init	2
-../Core/Src/main.c:582:13:MX_GPIO_Init	1
-../Core/Src/main.c:634:6:Error_Handler	1
+../Core/Src/main.c:406:6:SystemClock_Config	3
+../Core/Src/main.c:448:13:MX_I2C2_Init	4
+../Core/Src/main.c:496:13:MX_TIM3_Init	4
+../Core/Src/main.c:545:13:MX_USART3_UART_Init	2
+../Core/Src/main.c:580:13:MX_GPIO_Init	1
+../Core/Src/main.c:632:6:Error_Handler	1

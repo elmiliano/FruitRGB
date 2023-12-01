@@ -5,7 +5,7 @@ import socket
 import sys
 
 #PORT DEFINITION
-stm32_port = Serial('/dev/cu.usbmodem1103', 115200, timeout=100)
+stm32_port = Serial('/dev/cu.usbmodem1103', 115200, timeout=1000)
 
 #SERVER DEFINITION
 host = "10.0.0.23"
