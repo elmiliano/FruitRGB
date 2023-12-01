@@ -4,8 +4,8 @@ from rgb import RGB
 import pandas as pd
 
 conn = mysql.connector.connect( # connect to MySQL DB
-    user = 'root',
-    password = 'gsv.092465',
+    user = 'app_usr',
+    password = '7@Rvopcpwc',
     host = 'localhost',
     database = 'sys'
 )

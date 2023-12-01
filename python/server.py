@@ -1,11 +1,10 @@
 import socket 
 
-# SOCKET SERVER VARIABLES
-HOST = '10.0.0.23'
+HOST = '10.0.0.20'
 PORT = 5001
 BUFFER_SIZE = 1024
 
-class Server: # define socket Server class
+class Server:
     def __init__(self):
         self.host = HOST
         self.port = PORT
@@ -16,34 +15,34 @@ class Server: # define socket Server class
         self.addr = None
         self.messages = []
 
-    def up(self): # start socket server
+    def up(self):
         self.server.listen(100)
         print('Server up')
     
 
-    def connect(self): # accept client connections
+    def connect(self):
         self.conn, self.addr = self.server.accept()
         print(f'Connected to: {self.addr}')
         
     
-    def clientthread(self): # receive client message
+    def clientthread(self):
             while True:
                 message = self.conn.recv(self.buffer)
-
                 if message:
                     if not len(message) > 14:
-
                         self.messages.append(message) 
-
+                    #if len(self.messages) > 20:
+                       #self.conn.close()
                 else:
                     break
+            #self.conn.close()
             
 
-    def handlebyte(self): # format data from byte
+    def handlebyte(self):
         cleaned_strings = [msg.decode('utf-8').strip() for msg in self.messages]
         self.messages = cleaned_strings
 
-    def close(): # close all client connections
+    def close():
         server.shutdown(socket.SHUT_RDWR)
         server.close()
         print ("closed")

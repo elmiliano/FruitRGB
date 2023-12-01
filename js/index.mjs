@@ -5,8 +5,8 @@ const app = express(); // define express server
 app.use(express.json());
 
 const db = mysql.createConnection({ // connect to MySQL DB
-    user : 'root',
-    password : 'gsv.092465',
+    user : 'app_usr',
+    password : '7@Rvopcpwc',
     host : 'localhost',
     database : 'sys'
 })
