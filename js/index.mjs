@@ -1,4 +1,5 @@
 import express from "express";
+import { Int } from "mssql";
 import mysql from 'mysql';
 
 const app = express(); // define express server
@@ -18,8 +19,17 @@ app.listen(3000, () => // begin listen
 );
 
 app.get('/data', (req,res) => { // return most recent DB SensorGrades table entry
-    const result = db.query('SELECT * FROM SensorGrades ORDER BY idSensorGrades DESC LIMIT 1', function(error,results,fields){
+    const result = db.query('SELECT * FROM SensorGrades ORDER BY idSensorGrades DESC LIMIT 1', (error,results,fields)=>{
         if (error) throw error;
         res.send(results)
     });
 })
+
+app.post('/id?', (req,res) => {
+    const parameters = {id: req.body.id_value}
+    const result = db.query('SELECT * FROM SensorGrades WHERE idSensorGrades = ?', parameters[id_value] ,(error, results, fields) => {
+        if(error) throw error;
+        res.send(results)
+    });
+});
+
