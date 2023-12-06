@@ -1,16 +1,15 @@
 import express from "express";
-import { Int } from "mssql";
 import mysql from 'mysql';
 
 const app = express(); // define express server
 app.use(express.json());
 
 const db = mysql.createConnection({ // connect to MySQL DB
-    user : 'app_usr',
-    password : '7@Rvopcpwc',
-    host : 'localhost',
-    database : 'sys'
-})
+     user : 'app_usr',
+     password : '7@Rvopcpwc',
+     host : 'localhost',
+     database : 'sys'
+ });
 
 db.connect();
 
@@ -25,9 +24,10 @@ app.get('/data', (req,res) => { // return most recent DB SensorGrades table entr
     });
 })
 
-app.post('/id?', (req,res) => {
-    const parameters = {id: req.body.id_value}
-    const result = db.query('SELECT * FROM SensorGrades WHERE idSensorGrades = ?', parameters[id] ,(error, results, fields) => {
+app.post('/id?', async (req,res) => {
+    const parameters = {idvalue : req.body.id}
+    res.send(console.log(parameters.idvalue))
+    const result = db.query('SELECT * FROM SensorGrades WHERE idSensorGrades = ?', parameters.idvalue ,(error, results, fields) => {
         if(error) throw error;
         res.send(results)
     });
