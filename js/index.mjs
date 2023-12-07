@@ -1,23 +1,23 @@
 import express from "express";
 import mysql from 'mysql';
 
+const app = express(); // define express server
 app.use( (req,res, next) => {
     res.append('Access-Control-Allow-Origin', ['*']);
-    res.append('Accedd-Control-Allow-Methods', 'GET,POST');
+    res.append('Access-Control-Allow-Methods', 'GET,POST');
     next();
 });
 
-const app = express(); // define express server
 app.use(express.json());
 
-// const db = mysql.createConnection({ // connect to MySQL DB
-//      user : 'app_usr',
-//      password : '7@Rvopcpwc',
-//      host : 'localhost',
-//      database : 'sys'
-//  });
+const db = mysql.createConnection({ // connect to MySQL DB
+     user : 'app_usr',
+     password : '7@Rvopcpwc',
+     host : 'localhost',
+     database : 'sys'
+ });
 
-// db.connect();
+db.connect();
 
 app.listen(3000, () => // begin listen
   console.log('Example app listening on port 3000!'),
