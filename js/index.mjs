@@ -4,7 +4,7 @@ import mysql from 'mysql';
 app.use( (req,res, next) => {
     res.append('Access-Control-Allow-Origin', ['*']);
     res.append('Accedd-Control-Allow-Methods', 'GET,POST');
-    next()    
+    next();
 });
 
 const app = express(); // define express server
