@@ -2,6 +2,13 @@ import express from "express";
 import mysql from 'mysql';
 
 const app = express(); // define express server
+app.use( (req,res, next) => {
+    res.append('Access-Control-Allow-Origin', ['*']);
+    res.append('Access-Control-Allow-Headers', ['*']);
+    res.append('Access-Control-Allow-Methods', 'GET,POST');
+    next();
+});
+
 app.use(express.json());
 
 const db = mysql.createConnection({ // connect to MySQL DB
@@ -26,7 +33,6 @@ app.get('/data', (req,res) => { // return most recent DB SensorGrades table entr
 
 app.post('/id?', async (req,res) => {
     const parameters = {idvalue : req.body.id}
-    res.send(console.log(parameters.idvalue))
     const result = db.query('SELECT * FROM SensorGrades WHERE idSensorGrades = ?', parameters.idvalue ,(error, results, fields) => {
         if(error) throw error;
         res.send(results)
